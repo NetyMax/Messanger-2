@@ -2,11 +2,9 @@ package main
 
 import (
 	"log"
-	"messenger/ws"
 	"net/http"
-	"os"
 
-	"github.com/Max/messenger-2/db"
+	"messenger-2/ws"
 )
 
 func main() {
@@ -16,10 +14,5 @@ func main() {
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
-	}
-
-	err := db.InitDB(os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("DB connection error:", err)
 	}
 }

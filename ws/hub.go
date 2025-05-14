@@ -27,8 +27,16 @@ func UnRegisterCkient(userID string) {
 
 func SendToUser(to string, message []byte) {
 	hub.mu.RLock()
-	defer hub.my.RUnlock()
+	defer hub.mu.RUnlock()
 	if client, ok := hub.clients[to]; ok {
 		client.send <- message
 	}
+}
+
+func HubMu() *sync.RWMutex {
+	return &hub.mu
+}
+
+func HubClients() map[string]*Client {
+	return hub.clients
 }

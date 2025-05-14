@@ -2,8 +2,6 @@ package ws
 
 import (
 	"encoding/json"
-
-	"github.com/Max/messenger-2/db"
 )
 
 type Message struct {
@@ -18,8 +16,6 @@ func HandleMessage(from string, data []byte) {
 	if err != nil || msg.Type != "message" {
 		return
 	}
-
-	_ = db.SaveMessage(from, msg.To, msg.Content)
 
 	response, _ := json.Marshal(struct {
 		From    string `json:"from"`

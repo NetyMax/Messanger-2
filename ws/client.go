@@ -13,54 +13,56 @@ type Client struct {
 	userID string
 }
 
-var upgarder = websocket.Upgarder{
-	Check0rigin: func(r *http.Request), bool {return true},
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool { return true },
 }
 
-func HandleWebsocket(w http.ResponseWriter, r *http.Request) {
+func HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("user")
-	if userID == ""
-	http.Error(w,"error", http.StatusBadRequest)
-	return
+	if userID == "" {
+		http.Error(w, "error", http.StatusUnauthorized)
+		return
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Println("error", err)
+		return
+	}
+
+	client := &Client{
+		conn:   conn,
+		send:   make(chan []byte),
+		userID: userID,
+	}
+
+	RegisterClient(userID, client)
+	go client.read()
+	go client.write()
 }
 
-conn, err := upgarder.Upgarder(w, r , nil)
-if err != nil {
-	log.Println("error", err)
-	return
-}
-
-client: &Client {
-	conn: conn,
-	send:	make(chan[]byte),
-	userID: userID,
-}
-
-RegisterClient(userID, client)
-go client.read()
-go client.write()
-
-func( c *Client) read {
+func (c *Client) read() {
 	defer func() {
 		c.conn.Close()
-		UnRegisterCkient(c.user.ID)
+		UnRegisterCkient(c.userID)
 	}()
 
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Println("ERROR", err)
+			log.Println("error", err)
 			break
 		}
+		HandleMessage(c.userID, message)
 	}
+}
 
-	func (c *client) write() {
-		for msg := range c.send {
-			err: c.conn.WriteMessage(websocket.TextMessage, msg)
-			if err != nil {
-				log.Println("error". err)
-				break
-			}
+func (c *Client) write() {
+	for msg := range c.send {
+		err := c.conn.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			log.Println("Write error:", err)
+			break
 		}
 	}
 }
