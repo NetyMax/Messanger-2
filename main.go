@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"messenger-2/ws"
+	"github.com/Max/messenger-2/ws"
 )
 
 func main() {

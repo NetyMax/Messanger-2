@@ -1,4 +1,4 @@
-package main
+package ws_test
 
 import (
 	"encoding/json"
