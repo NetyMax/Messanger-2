@@ -1,8 +1,9 @@
-package ws_test
+package main
 
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -38,7 +39,7 @@ func TestHandleWebSocket_ValidRequest(t *testing.T) {
 	defer wsConn.Close()
 }
 
-func TestCleintReadAndWrite(t *testing.T) {
+func TestClientReadAndWrite(t *testing.T) {
 	var receivedFrom string
 	var receivedMsg []byte
 
@@ -47,7 +48,7 @@ func TestCleintReadAndWrite(t *testing.T) {
 		receivedMsg = msg
 	}
 
-	server := httptest.Newserver(http.HandleFunc(ws.HadleWebSocket))
+	server := httptest.NewServer(http.HandleFunc(ws.HandleWebSocket))
 	defer server.Close()
 
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/?user=testuser"
@@ -63,7 +64,7 @@ func TestCleintReadAndWrite(t *testing.T) {
 	}
 
 	if string(receivedMsg) == "" {
-		t.Errorf("message ws not")
+		t.Errorf("expected non-empty message")
 	}
 
 	ws.SendToUser("testuser", []byte("echo test"))
@@ -74,7 +75,7 @@ func TestCleintReadAndWrite(t *testing.T) {
 	}
 
 	if string(msg) != "echo test" {
-		t.Errorf("expected")
+		t.Errorf("Expected 'echo test', got %s", msg)
 	}
 }
 
@@ -122,15 +123,15 @@ func TestRegisterAndUnregisterClient(t *testing.T) {
 	client := &ws.Client{send: make(chan []byte, 1)}
 	ws.RegisterClient("user1", client)
 
-	ws.HubMu().RLock
+	ws.HubMu().RLock()
 	if ws.HubClients()["user1"] != client {
 		t.Errorf("error")
 	}
 
 	ws.HubMu().RUnlock()
-	ws.RegisterClient("user1")
-	ws.HubMu().RLock
-	if ws.RegisterClient()["user1"]; ok {
+	ws.RegisterClient("user1", client)
+	ws.HubMu().RLock()
+	if _, ok := ws.HubClients()["user1"]; ok {
 		t.Errorf("error")
 	}
 
@@ -141,7 +142,7 @@ func TestSendToUser(t *testing.T) {
 	message := []byte("hello")
 
 	recvChan := make(chan []byte, 1)
-	cleint := &ws.Cleint{send: recvChan}
+	client := &ws.Client{send: recvChan}
 	ws.RegisterClient("user2", client)
 
 	ws.SendToUser("user2", message)
@@ -155,5 +156,5 @@ func TestSendToUser(t *testing.T) {
 		t.Errorf("error")
 	}
 
-	ws.UnRegisterCkient("user2")
+	ws.UnRegisterClient("user2")
 }
